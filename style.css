@@ -1,0 +1,245 @@
+/* Reset & Fonts */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+}
+
+body {
+  background: #f0f2f5;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  transition: background 0.3s;
+}
+
+body.dark {
+  background: #121212;
+  color: #eee;
+}
+
+body.dark .container {
+  background: #1e1e1e;
+  color: #eee;
+}
+
+body.dark input,
+body.dark select,
+body.dark button {
+  background: #333;
+  color: #eee;
+  border: none;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  transition: background 0.3s;
+}
+
+/* Header */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+header h1 {
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.toggle-btn {
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+  background: #333;
+  color: #fff;
+  transition: 0.3s;
+}
+
+.toggle-btn:hover {
+  background: #555;
+}
+
+/* Balance Card */
+.balance {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.balance h2 {
+  font-weight: 500;
+  color: #666;
+}
+
+.balance h3 {
+  font-size: 2rem;
+  margin: 10px 0;
+  color: #333;
+}
+
+.inc-exp-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.inc-exp-container div {
+  flex: 1;
+  padding: 15px;
+  text-align: center;
+  border-radius: 10px;
+  background: #f0f0f0;
+  margin: 0 5px;
+  transition: background 0.3s;
+}
+
+.money.plus {
+  color: green;
+  font-weight: 500;
+}
+
+.money.minus {
+  color: red;
+  font-weight: 500;
+}
+
+/* Transaction Section */
+.transaction-section {
+  margin-top: 20px;
+}
+
+.transaction-section h3 {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.list {
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: #fafafa;
+  border-left: 5px solid #333;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.list li.income {
+  border-left-color: green;
+}
+
+.list li.expense {
+  border-left-color: red;
+}
+
+.list li:hover {
+  background: #e0e0e0;
+  transform: translateX(3px);
+}
+
+.list li button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: red;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+/* Add Transaction Form */
+.add-transaction {
+  margin-top: 20px;
+}
+
+.add-transaction h3 {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+input,
+select {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  outline: none;
+  transition: 0.3s;
+}
+
+input:focus,
+select:focus {
+  border-color: #333;
+}
+
+button {
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  background: #333;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #555;
+}
+
+/* Charts */
+.charts {
+  margin-top: 20px;
+}
+
+canvas {
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+/* Scrollbar Styling */
+.list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+body.dark .list::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .inc-exp-container {
+    flex-direction: column;
+  }
+  .inc-exp-container div {
+    margin: 5px 0;
+  }
+}

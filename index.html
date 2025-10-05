@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pro Budget Tracker</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    
+    * { box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif; }
+    body { background: #f0f2f5; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; transition: background 0.3s; }
+
+    body.dark { background: #121212; color: #eee; }
+    body.dark .container { background: #1e1e1e; color: #eee; }
+    body.dark input, body.dark select, body.dark button { background: #333; color: #eee; border: none; }
+
+    .container { width: 100%; max-width: 480px; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: background 0.3s; }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    header h1 { font-size: 1.8rem; color: #333; }
+    .toggle-btn { cursor: pointer; padding: 5px 10px; border-radius: 5px; background: #333; color: #fff; transition: 0.3s; }
+    .toggle-btn:hover { background: #555; }
+
+    .balance { text-align: center; margin-bottom: 20px; }
+    .balance h2 { font-weight: 500; color: #666; }
+    .balance h3 { font-size: 2rem; margin: 10px 0; color: #333; }
+    .inc-exp-container { display: flex; justify-content: space-between; margin-top: 10px; }
+    .inc-exp-container div { flex: 1; padding: 15px; text-align: center; border-radius: 10px; background: #f0f0f0; margin: 0 5px; transition: background 0.3s; }
+    .money.plus { color: green; font-weight: 500; }
+    .money.minus { color: red; font-weight: 500; }
+
+    .transaction-section { margin-top: 20px; }
+    .transaction-section h3 { margin-bottom: 10px; text-align: center; }
+    .list { list-style: none; max-height: 200px; overflow-y: auto; }
+    .list li { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 8px; margin-bottom: 10px; background: #fafafa; border-left: 5px solid #333; transition: background 0.3s; }
+    .list li.income { border-left-color: green; }
+    .list li.expense { border-left-color: red; }
+    .list li button { background: transparent; border: none; cursor: pointer; color: red; font-weight: bold; }
+
+    .add-transaction { margin-top: 20px; }
+    .add-transaction h3 { margin-bottom: 10px; text-align: center; }
+    form { display: flex; flex-direction: column; gap: 10px; }
+    input, select { padding: 10px; border-radius: 6px; border: 1px solid #ccc; outline: none; transition: 0.3s; }
+    input:focus, select:focus { border-color: #333; }
+    button { padding: 10px; border-radius: 6px; border: none; background: #333; color: #fff; cursor: pointer; transition: 0.3s; }
+    button:hover { background: #555; }
+
+    .charts { margin-top: 20px; }
+    canvas { background: #fff; border-radius: 12px; padding: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+
+    @media (max-width: 500px) {
+      .inc-exp-container { flex-direction: column; }
+      .inc-exp-container div { margin: 5px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Budget Tracker</h1>
+      <span class="toggle-btn" onclick="toggleDarkMode()">Dark Mode</span>
+    </header>
+
+    <div class="balance">
+      <h2>Your Balance</h2>
+      <h3 id="balance">$0</h3>
+      <div class="inc-exp-container">
+        <div>
+          <h4>Income</h4>
+          <p id="money-plus" class="money plus">+$0</p>
+        </div>
+        <div>
+          <h4>Expense</h4>
+          <p id="money-minus" class="money minus">-$0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="transaction-section">
+      <h3>Transactions</h3>
+      <ul id="list" class="list"></ul>
+    </div>
+
+    <div class="add-transaction">
+      <h3>Add New Transaction</h3>
+      <form id="form">
+        <input type="text" id="text" placeholder="Description" required>
+        <input type="number" id="amount" placeholder="Amount" required>
+        <select id="type">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <select id="category">
+          <option value="General">General</option>
+          <option value="Food">Food</option>
+          <option value="Rent">Rent</option>
+          <option value="Salary">Salary</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Health">Health</option>
+        </select>
+        <button>Add Transaction</button>
+      </form>
+    </div>
+
+    <div class="charts">
+      <canvas id="pieChart"></canvas>
+      <canvas id="barChart" style="margin-top:20px;"></canvas>
+    </div>
+  </div>
+
+  <script>
+    
+    const balance = document.getElementById('balance');
+    const money_plus = document.getElementById('money-plus');
+    const money_minus = document.getElementById('money-minus');
+    const list = document.getElementById('list');
+    const form = document.getElementById('form');
+    const text = document.getElementById('text');
+    const amount = document.getElementById('amount');
+    const type = document.getElementById('type');
+    const category = document.getElementById('category');
+
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+    form.addEventListener('submit', addTransaction);
+
+    function addTransaction(e){
+      e.preventDefault();
+      const transaction = {
+        id: generateID(),
+        text: text.value,
+        amount: +amount.value,
+        type: type.value,
+        category: category.value
+      };
+      transactions.push(transaction);
+      updateLocalStorage();
+      init();
+      form.reset();
+    }
+
+    function generateID(){
+      return Math.floor(Math.random()*1000000);
+    }
+
+    function removeTransaction(id){
+      transactions = transactions.filter(t => t.id !== id);
+      updateLocalStorage();
+      init();
+    }
+
+    function updateLocalStorage(){
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+
+    function addTransactionDOM(transaction){
+      const sign = transaction.type === 'expense' ? '-' : '+';
+      const item = document.createElement('li');
+      item.classList.add(transaction.type);
+      item.innerHTML = `
+        ${transaction.text} [${transaction.category}] <span>${sign}$${Math.abs(transaction.amount)}</span>
+        <button onclick="removeTransaction(${transaction.id})">x</button>
+      `;
+      list.appendChild(item);
+    }
+
+    function updateValues(){
+      const amounts = transactions.map(t => t.type === 'income' ? t.amount : -t.amount);
+      const total = amounts.reduce((acc, item) => acc+item, 0).toFixed(2);
+      const income = amounts.filter(i=>i>0).reduce((acc,i)=>acc+i,0).toFixed(2);
+      const expense = amounts.filter(i=>i<0).reduce((acc,i)=>acc+Math.abs(i),0).toFixed(2);
+
+      balance.innerText = `$${total}`;
+      money_plus.innerText = `+$${income}`;
+      money_minus.innerText = `-$${expense}`;
+
+      renderCharts();
+    }
+
+    function init(){
+      list.innerHTML='';
+      transactions.forEach(addTransactionDOM);
+      updateValues();
+    }
+
+    init();
+
+    function toggleDarkMode(){
+      document.body.classList.toggle('dark');
+    }
+
+    let pieChart, barChart;
+    function renderCharts(){
+      const categories = [...new Set(transactions.map(t=>t.category))];
+      const catTotals = categories.map(cat => {
+        return transactions.filter(t=>t.category===cat && t.type==='expense')
+          .reduce((acc,t)=>acc+t.amount,0);
+      });
+
+      if(pieChart) pieChart.destroy();
+      const pieCtx = document.getElementById('pieChart').getContext('2d');
+      pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+          labels: categories,
+          datasets:[{
+            data: catTotals,
+            backgroundColor: categories.map(()=>`hsl(${Math.random()*360},70%,60%)`)
+          }]
+        }
+      });
+
+      const incomeTotal = transactions.filter(t=>t.type==='income').reduce((acc,t)=>acc+t.amount,0);
+      const expenseTotal = transactions.filter(t=>t.type==='expense').reduce((acc,t)=>acc+t.amount,0);
+      if(barChart) barChart.destroy();
+      const barCtx = document.getElementById('barChart').getContext('2d');
+      barChart = new Chart(barCtx, {
+        type:'bar',
+        data:{
+          labels:['Income','Expense'],
+          datasets:[{
+            label:'Total Amount',
+            data:[incomeTotal, expenseTotal],
+            backgroundColor:['green','red']
+          }]
+        },
+        options:{
+          responsive:true,
+          plugins:{legend:{display:false}}
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
